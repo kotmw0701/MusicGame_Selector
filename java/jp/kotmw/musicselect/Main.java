@@ -25,7 +25,7 @@ public class Main {
 		TwitterStream stream = new TwitterStreamFactory().getInstance();
 		stream.addListener(new EventListener());
 		stream.user();
-		JDA jda = new JDABuilder(AccountType.BOT).setToken("NDMzNTk3NzM2NTA4NDU2OTcx.Da-K5Q.LB45ykxAEbXZh-4V3hvJQvzeGAA").addEventListener(new EventListener()).buildBlocking();
+		JDA jda = new JDABuilder(AccountType.BOT).setToken("*****").addEventListener(new EventListener()).buildBlocking();
 		try(BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
 			while(true) {
 				String text = reader.readLine();

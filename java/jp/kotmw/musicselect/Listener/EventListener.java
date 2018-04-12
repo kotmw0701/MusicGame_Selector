@@ -1,12 +1,12 @@
 package jp.kotmw.musicselect.Listener;
 
 import java.awt.Color;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import jp.kotmw.musicselect.musicdatas.Chunithm;
 import jp.kotmw.musicselect.selector.RandomSelector;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Message;
@@ -47,7 +47,7 @@ public class EventListener extends ListenerAdapter implements StatusListener {
 				return;
 			}
 			try {
-				event.getChannel().sendMessage(event.getAuthor().getAsMention()).embed(convertEmbed(RandomSelector.randomget(Integer.parseInt(limit), category, diff, artist, bpm))).complete();
+				event.getChannel().sendMessage(event.getAuthor().getAsMention()).embed(convertEmbed(RandomSelector.selector.randomget(Integer.parseInt(limit), category, diff, artist, bpm))).complete();
 			} catch (NumberFormatException | SQLException e) {
 				lateRemover(event.getChannel().sendMessage(e.getMessage()+separator+"コマンドにエラーが存在します").complete());
 				e.printStackTrace();
@@ -74,13 +74,12 @@ public class EventListener extends ListenerAdapter implements StatusListener {
 			String artist = getCommand(args, 5, null);
 			String bpm = getCommand(args, 6, "0");
 			try {
-				ResultSet set = RandomSelector.randomget(Integer.parseInt(limit), category, diff, artist, bpm);
+				List<Chunithm> chunithms = RandomSelector.selector.randomget(Integer.parseInt(limit), category, diff, artist, bpm);
 				if(!limit.matches("^\\d+$") || (diff != null && !diff.matches("^\\d{1,2}\\+?(:up|:low)?")) || (bpm != null && !bpm.matches("^\\d+(:up|:low)?"))) {
 					reply = "コマンドにエラーが存在します";
 				} else {
-					while (set.next()) {
-						reply += "『"+set.getString("title")+"』"+separator+set.getString("category")+separator+separator;
-					}
+					for(Chunithm uni : chunithms)
+						reply+="『"+uni.getTitle()+"』"+separator+uni.getCategory()+separator+separator;
 				}
 			} catch (SQLException e) {
 				reply = e.getMessage() +separator+"コマンドにエラーが存在します";
@@ -96,18 +95,13 @@ public class EventListener extends ListenerAdapter implements StatusListener {
 		}
 	}
 	
-	private MessageEmbed convertEmbed(ResultSet set) {
+	private MessageEmbed convertEmbed(List<Chunithm> chunithms) {
 		EmbedBuilder builder = new EmbedBuilder();
 		builder.setColor(Color.GREEN);
 		builder.setTitle("おすすめ曲を教えてあげるね！ ");
 		builder.setDescription(randomSerif());
-		try {
-			while (set.next())
-				builder.addField("『"+set.getString("title")+"』", set.getString("artist")+separator+set.getString("category"), true);
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return builder.build();
+		chunithms.forEach(uni -> builder.addField("『"+uni.getTitle()+"』", uni.getArtist()+separator+uni.getCategory(), true));
+		return builder.build();	
 	}
 	
 	private String setSeparator(String... args) {
